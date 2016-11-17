@@ -18,7 +18,7 @@
     <script id="hello-screen-template" type="text/template">
         <div class="titleWrapper">
             <div class="title">
-                TANK
+                FRIENDLY <br> TANK
             </div>
             <div class="buttons">
                 <button id="btnCreateGame" class="btn createGame">CREATE</button>
@@ -38,7 +38,31 @@
             <div id="spanNewGameCode" class="gameId">Error!</div>
             <div id="playersWaiting"></div>
         </div>
+    </script>
 
+    <script id="create-game-menu-template" type="text/template">
+        <div class="createGameMenuWrapper">
+            <div class="info">
+                <label for="inputGameName">Game Name:</label>
+                <input id="inputGameName" type="text" />
+            </div>
+
+            <div class="info">
+                <label for="inputYourNickname">Your Nickname:</label>
+                <input id="inputYourNickname" type="text"/>
+            </div>
+
+            <div class="info">
+                <label for="inputPassword">Password:</label>
+                <input id="inputPassword" type="password" />
+            </div>
+
+            <div class="info buttons">
+                <button id="btnBuild" class="btn">Create Game</button>
+                <!-- <div id="createNewGame"></div> -->
+            </div>
+
+        </div>
     </script>
 
     <script id="join-game-template" type="text/template">
@@ -60,15 +84,48 @@
        </div>
    </script>
 
+   <script id="join-game-menu-template" type="text/template">
+       <div class="joinGameMenuWrapper">
+           <div class="joinGameMenuWrapperWrapper">
+           </div>
+       </div>
+  </script>
+
    <script id="game-field-template" type="text/template">
         <!-- <canvas id='gameFieldArea'></canvas> -->
-        <div id="gameFieldArea"></div>
-        <div id="statFieldArea">
+        <div id="gameFieldArea">
+            <div id="gameFieldAreaWrapper"></div>
+            <div id="statFieldArea">
+                <div class="logo"></div>
+                <div class="statContainer"></div>
+            </div>
+
+        </div>
+        <!-- <div id="statFieldArea">
             <div class="statisticTitle">
                 <span>STATISTIC <br> GAME</span>
             </div>
-        </div>
+        </div> -->
     </script>
+
+    <script id="join-select-game-template" type="text/template">
+        <div class="joinSelectGame">
+            <div class="info">
+                <label for="inputYourNickname">Your Nickname:</label>
+                <input id="inputYourNickname" type="text"/>
+            </div>
+
+            <div class="info">
+                <label for="inputPassword">Password:</label>
+                <input id="inputPassword" type="password" />
+                <div id="passStatus"></div>
+            </div>
+
+            <div class="info buttons">
+                <button id="btnStart" class="btn">Start</button>
+            </div>
+        </div>
+   </script>
 
 
 
