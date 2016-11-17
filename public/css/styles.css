@@ -371,6 +371,7 @@ html, body {
             left:0px; top: 0px;
             background-color: #F0F8FF;
             opacity: 0.8;
+            display: none;
         }
 
                 #statFieldArea .logo {
@@ -386,6 +387,7 @@ html, body {
                     width: auto;
                     height: 60px;
                     float:right;
+
                 }
 
 

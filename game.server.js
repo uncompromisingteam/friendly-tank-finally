@@ -29,25 +29,13 @@ exports.initGame = function(sio, socket){
     gameSocket.on('hostCreateNewGame', hostCreateNewGame);
     gameSocket.on('hostBuildGame', hostBuildGame);
 
+    //join events
     gameSocket.on('getGames', getGames);
-
     gameSocket.on('playerJoinGame', playerJoinGame);
 
-    //gameSocket.on('disconnect', playerDisconnect);
-
     //player events
-    //gameSocket.on('playerJoinGame', playerJoinGame);
-
-    /*gameSocket.on('playerRun', playerRun);
+    gameSocket.on('playerRun', playerRun);
     gameSocket.on('playerStop', playerStop);
-    gameSocket.on('playerFire', playerFire);
-
-    gameSocket.on('bulletRemove', bulletRemove);
-
-
-    gameSocket.on('deadPlayer', deadPlayer);
-
-    gameSocket.on('disconnect', playerDisconnect);*/
 
 }
 
@@ -131,11 +119,22 @@ function playerJoinGame(data) {
         newPlayer.mySocketId = data.mySocketId;
         players[data.gameId].push( newPlayer );
 
-
     } else { passCheck = false; }
 
-    io.sockets.emit('playerJoinedGame', { passCheck: passCheck, player: newPlayer, playerActive: players[data.gameId].length-1, players: players[data.gameId] });
+    io.sockets.emit('playerJoinedGame', { passCheck: passCheck, player: newPlayer, playerActive: players[data.gameId].length-1, players: players[data.gameId], gameId: data.gameId });
 
+}
+
+function playerRun(data) {
+    // console.log( players[data.gameId] );
+    players[data.gameId][data.playerNum].course = data.player.course;
+    io.sockets.in(this.gameId).emit('playerRuned', { player: players[data.gameId][data.playerNum], playerNum: data.playerNum, players: players[data.gameId] });
+}
+
+function playerStop(data) {
+    players[data.gameId][data.playerNum].posX = data.player.posX;
+    players[data.gameId][data.playerNum].posY = data.player.posY;
+    io.sockets.in(this.gameId).emit('playerStoped', { player: players[data.gameId][data.playerNum], playerNum: data.playerNum, players: players[data.gameId] });
 }
 
 
@@ -154,7 +153,7 @@ function playerDisconnect() {
 
     var numDisconnectPlayer;
 
-    console.log(gameId);
+    //console.log(gameId);
 
 
     /*for (var i = 0, l = players.length; i < l; i++) {

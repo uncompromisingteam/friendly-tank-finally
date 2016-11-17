@@ -27,6 +27,9 @@
 
             IO.socket.on('playerJoinedGame', IO.playerJoinedGame);
 
+            IO.socket.on('playerRuned', IO.playerRuned);
+            IO.socket.on('playerStoped', IO.playerStoped);
+
             IO.socket.on('buildedGame', IO.buildedGame);
 
 
@@ -64,6 +67,7 @@
         },
 
         playerJoinedGame: function(data){
+            console.log('joined');
 
             if ( data.passCheck === false ) {
                 $("#inputPassword").val('') ;
@@ -75,7 +79,19 @@
                 App.controlGame(data);
             }
 
+        },
+
+        playerRuned: function(data){
+            App.Player.players = data.players.slice();
+            App.Player.refreshAfterRun(data).run();
+        },
+
+        playerStoped: function(data) {
+            App.Player.players = data.players.slice();
+            App.Player.refreshAfterRun(data).stop();
+            App.Player.canRun = true;
         }
+
 
 
 
@@ -200,14 +216,13 @@
             if ( data.player.mySocketId === App.mySocketId && data.playerActive !== 0) {
                 App.$gameArea.html( App.$gameFieldTemplate );
                 App.drawingLevel();
+                //App.gameId = data.gameId;
                 for (var i = 0, l = data.players.length; i < l; i++) {
                     (function(e){
                         App.Player.createPlayer(data.players[e]);
                     })(i);
                 }
             } else {
-                console.log(App.mySocketId);
-                console.log(App.Player.players[data.playerActive].mySocketId);
                 App.Player.createPlayer( App.Player.players[data.playerActive] );
                 //console.log( $('.tankContainer_' + App.mySocketId) );
 
@@ -327,16 +342,18 @@
             },
 
             onPlayerSelectGameClick: function() {
-                App.Player.selectGameId = $(this).find(".gameListId").text();
-                App.$gameArea.html( App.$templateJoinSelectGame );
 
+                // App.Player.selectGameId = $(this).find(".gameListId").text();
+                App.gameId = $(this).find(".gameListId").text();
+
+                App.$gameArea.html( App.$templateJoinSelectGame );
             },
 
             onPlayerStartClick: function() {
                 var data = {
                     playerName: $('#inputYourNickname').val() || 'anon',
                     password: $('#inputPassword').val() || '',
-                    gameId: App.Player.selectGameId,
+                    gameId: App.gameId,
                     mySocketId: App.mySocketId
                 };
 
@@ -371,7 +388,6 @@
             },
 
             windowRotate: function() {
-                console.log(App.Player.playerActive);
                 $("#gameFieldAreaWrapper").css({ 'left':  $("#gameArea").width()/2 - App.Player.players[App.Player.playerActive].posX +'px', 'top':  $("#gameArea").height()/2 - App.Player.players[App.Player.playerActive].posY +'px' });
             },
 
@@ -379,132 +395,125 @@
 
                 var runAnimateFrameID;
 
-                if ((eventObject.keyCode === 39) && (App.Player.canRun === true)) {
+                if ((eventObject.keyCode === 39) && (App.Player.canRun === true) ) {
                     App.Player.canRun = false;
-                    runRightTank();
-                }
-                if ((eventObject.keyCode === 37) && (App.Player.canRun === true)) {
-                    App.Player.canRun = false;
-                    runLeftTank();
-                }
-                if ((eventObject.keyCode === 38) && (App.Player.canRun === true)) {
-                    App.Player.canRun = false;
-                    runTopTank();
-                }
-                if ((eventObject.keyCode === 40) && (App.Player.canRun === true)) {
-                    App.Player.canRun = false;
-                    runBottomTank();
-                }
-
-
-
-                function runRightTank() {
-                    runAnimateFrameID = requestAnimationFrame(runRightTank);
-                    // refreshAnimateFrameID[App.Player.playerActive] = requestAnimationFrame(runRightTank);
-
-                    var dt = 0.017;
-
                     App.Player.players[App.Player.playerActive].course = 'right';
-
-                    /*$(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'left': App.Player.players[App.Player.playerActive].posX + 'px',
-                                                                                                      'top': App.Player.players[App.Player.playerActive].posY + 'px',
-                                                                                                      'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                                                                                                });*/
-
-                        App.Player.players[App.Player.playerActive].posX += App.Player.speedPlayer*dt;
-                        $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'left': App.Player.players[App.Player.playerActive].posX + 'px',
-                                                                                                           'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                                                                                                       });
-                        App.Player.windowRotate();
-
+                    IO.socket.emit('playerRun', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    App.$doc.on('keyup', function(){
+                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    });
 
                 }
-                function runLeftTank() {
-
-                    runAnimateFrameID = requestAnimationFrame(runLeftTank);
-
-                    var dt = 0.017;
-
+                if ((eventObject.keyCode === 37) && (App.Player.canRun === true) ) {
+                    App.Player.canRun = false;
                     App.Player.players[App.Player.playerActive].course = 'left';
-
-                        App.Player.players[App.Player.playerActive].posX -= App.Player.speedPlayer*dt;
-                        $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'left': App.Player.players[App.Player.playerActive].posX + 'px',
-                                                                                                            'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                                                                                                        });
-                        App.Player.windowRotate();
-
-                    // IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
-
+                    IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    App.$doc.on('keyup', function(){
+                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    });
                 }
-                function runTopTank() {
+                if ((eventObject.keyCode === 38) && (App.Player.canRun === true) ) {
+                    App.Player.canRun = false;
+                    App.Player.players[App.Player.playerActive].course = 'top';
+                    IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    App.$doc.on('keyup', function(){
+                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    });
+                }
+                if ((eventObject.keyCode === 40) && (App.Player.canRun === true) ) {
+                    App.Player.canRun = false;
+                    App.Player.players[App.Player.playerActive].course = 'bottom';
+                    IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    App.$doc.on('keyup', function(){
+                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    });
+                }
 
-                    runAnimateFrameID = requestAnimationFrame(runTopTank);
+                if (eventObject.keyCode === 27) {
+                    $("#statFieldArea").css({'display': 'block'});
+                    App.$doc.on('keyup', function(){
+                        $("#statFieldArea").css({'display': 'none'});
+                    });
+                }
+
+                // App.$doc.on('keyup', function(){
+                //     IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                // });
+
+
+
+                // function runRightTank() {
+                //     runAnimateFrameID = requestAnimationFrame(runRightTank);
+                //
+                //     var dt = 0.017;
+                //
+                //     App.Player.players[App.Player.playerActive].course = 'right';
+                //
+                //         App.Player.players[App.Player.playerActive].posX += App.Player.speedPlayer*dt;
+                //         $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'left': App.Player.players[App.Player.playerActive].posX + 'px',
+                //                                                                                            'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
+                //                                                                                        });
+                //
+                //         IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
+                //
+                // }
+
+
+            },
+
+            refreshAfterRun: function(data) {
+                var data = data;
+                console.log( App.gameId );
+
+                var refresh = function(){
+                    App.Player.refreshAnimateFrameID[data.playerNum] = requestAnimationFrame(refresh);
 
                     var dt = 0.017;
 
-                    App.Player.players[App.Player.playerActive].course = 'top';
-
-                        App.Player.players[App.Player.playerActive].posY -= App.Player.speedPlayer*dt;
-                        $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'top': App.Player.players[App.Player.playerActive].posY + 'px',
-                                                                                                'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                                                                                            });
-                        App.Player.windowRotate();
+                    if ( App.Player.players[data.playerNum].course === 'right' ) { App.Player.players[data.playerNum].posX += App.Player.speedPlayer*dt; }
+                    if ( App.Player.players[data.playerNum].course === 'left' ) { App.Player.players[data.playerNum].posX -= App.Player.speedPlayer*dt; }
+                    if ( App.Player.players[data.playerNum].course === 'top' ) { App.Player.players[data.playerNum].posY -= App.Player.speedPlayer*dt; }
+                    if ( App.Player.players[data.playerNum].course === 'bottom' ) { App.Player.players[data.playerNum].posY += App.Player.speedPlayer*dt; }
 
 
-                }
-                function runBottomTank() {
+                    $('.tankContainer_'+ App.Player.players[data.playerNum].mySocketId ).css({'left': App.Player.players[data.playerNum].posX + 'px',
+                                                                                    'top': App.Player.players[data.playerNum].posY + 'px',
+                                                                                    'background-image':  App.Player.getCourseURL(data.player.course)
+                                                                                });
 
-                    runAnimateFrameID = requestAnimationFrame(runBottomTank);
-
-                    var dt = 0.017;
-
-                    App.Player.players[App.Player.playerActive].course = 'bottom';
-
-                    App.Player.players[App.Player.playerActive].posY += App.Player.speedPlayer*dt;
-                    $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'top': App.Player.players[App.Player.playerActive].posY + 'px',
-                                                                                            'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                                                                                        });
-                    App.Player.windowRotate();
-
+                    if (App.mySocketId === App.Player.players[data.playerNum].mySocketId) { App.Player.windowRotate(); }
                 }
 
-                App.$doc.on('keyup', function(){
-                    App.Player.canRun = true;
-                    window.cancelAnimationFrame(runAnimateFrameID);
-                });
-
-                /*if ((eventObject.keyCode === 39)) {
-                    App.Player.players[App.Player.playerActive].course = 'right';
-                    $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'left': App.Player.players[App.Player.playerActive].posX + 'px',
-                                                                                                      'top': App.Player.players[App.Player.playerActive].posY + 'px',
-                                                                                                      'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                                                                                                });
+                return {
+                    run: function() {
+                        refresh();
+                    },
+                    stop: function() {
+                        window.cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
+                        //App.Player.refreshAnimateFrameID.splice(data.playerNum, 1);
+                        // console.log(App.Player.refreshAnimateFrameID[data.playerNum]);
+                    }
                 }
 
-                if ((eventObject.keyCode === 37)) {
-                    App.Player.players[App.Player.playerActive].course = 'left';
-                    $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'left': App.Player.players[App.Player.playerActive].posX + 'px',
-                                                                                                      'top': App.Player.players[App.Player.playerActive].posY + 'px',
-                                                                                                      'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                                                                                                });
-                }
-
-                if ((eventObject.keyCode === 38)) {
-                    App.Player.players[App.Player.playerActive].course = 'top';
-                    $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'left': App.Player.players[App.Player.playerActive].posX + 'px',
-                                                                                                      'top': App.Player.players[App.Player.playerActive].posY + 'px',
-                                                                                                      'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                                                                                                });
-                }
-
-                if ((eventObject.keyCode === 40)) {
-                    App.Player.players[App.Player.playerActive].course = 'bottom';
-                    $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'left': App.Player.players[App.Player.playerActive].posX + 'px',
-                                                                                                      'top': App.Player.players[App.Player.playerActive].posY + 'px',
-                                                                                                      'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                                                                                                });
-                }*/
-
+                // function run() {
+                //
+                //     App.Player.refreshAnimateFrameID[data.playerNum] = requestAnimationFrame(refresh);
+                //
+                //     var dt = 0.017;
+                //
+                //     if ( App.Player.players[data.playerNum].course === 'right' ) { App.Player.players[data.playerNum].posX += App.Player.speedPlayer*dt; }
+                //     if ( App.Player.players[data.playerNum].course === 'left' ) { App.Player.players[data.playerNum].posX -= App.Player.speedPlayer*dt; }
+                //     if ( App.Player.players[data.playerNum].course === 'top' ) { App.Player.players[data.playerNum].posY -= App.Player.speedPlayer*dt; }
+                //     if ( App.Player.players[data.playerNum].course === 'bottom' ) { App.Player.players[data.playerNum].posY += App.Player.speedPlayer*dt; }
+                //
+                //
+                //     $('.tankContainer_'+ App.Player.players[data.playerNum].mySocketId ).css({'left': App.Player.players[data.playerNum].posX + 'px',
+                //                                                                     'top': App.Player.players[data.playerNum].posY + 'px',
+                //                                                                     'background-image':  App.Player.getCourseURL(data.player.course)
+                //                                                                 });
+                //
+                //     if (App.mySocketId === App.Player.players[data.playerNum].mySocketId) { App.Player.windowRotate(); }
+                // }
 
             },
 
