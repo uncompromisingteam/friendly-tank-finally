@@ -31,6 +31,9 @@
             IO.socket.on('playerStoped', IO.playerStoped);
             IO.socket.on('regularUpdatedCoordination', IO.regularUpdatedCoordination);
 
+            IO.socket.on('refreshPlayerAfterDisconnect', IO.refreshPlayerAfterDisconnect);
+            IO.socket.on('refreshGameAfterDisconnect', IO.refreshGameAfterDisconnect);
+
             IO.socket.on('buildedGame', IO.buildedGame);
         },
 
@@ -40,6 +43,7 @@
         },
 
         onNewGameCreated: function(data) {
+            console.log("create");
             App.Host.gameInit(data);
         },
 
@@ -55,12 +59,13 @@
             App.$gameArea.html( App.$gameFieldTemplate );
             App.drawingLevel();
 
-            App.controlGame(data);
+            //App.controlGame(data);
+            App.Player.createPlayer( App.Player.players[data.playerActive] );
             //App.Player.regularUpdateCoordination().update();
         },
 
         playerJoinedGame: function(data){
-            console.log('joined');
+
 
             if ( data.passCheck === false ) {
                 $("#inputPassword").val('') ;
@@ -70,6 +75,7 @@
                 App.Player.players = data.players.slice();
                 if ( App.Player.playerActive === null ) { App.Player.playerActive = data.playerActive; }
                 App.controlGame(data);
+                console.log('joined');
             }
 
         },
@@ -87,6 +93,19 @@
 
         regularUpdatedCoordination: function(data) {
             App.Player.players = data.players.slice();
+        },
+
+        refreshPlayerAfterDisconnect: function(data) {
+
+            var mySocketId = App.Player.players[data.playerNum].mySocketId;
+            //App.Player.players = data.players.slice();
+            App.Player.playerDisconnect(mySocketId);
+            //App.Player.playerActive -=1;
+        },
+
+        refreshGameAfterDisconnect: function(){
+            App.Player.gameDisconnect();
+            App.showInitScreen();
         }
 
 
@@ -203,10 +222,8 @@
         },
 
         controlGame: function(data) {
-            // App.$gameArea.html( App.$gameFieldTemplate );
-            // App.drawingLevel();
 
-            if ( data.player.mySocketId === App.mySocketId && data.playerActive !== 0) {
+            //if ( data.player.mySocketId === App.mySocketId && data.playerActive !== 0) {
                 App.$gameArea.html( App.$gameFieldTemplate );
                 App.hostSocketId = data.hostSocketId;
                 App.drawingLevel();
@@ -217,11 +234,11 @@
                         App.Player.createPlayer(data.players[e]);
                     })(i);
                 }
-            } else {
+            /*} else {
                 App.Player.createPlayer( App.Player.players[data.playerActive] );
                 //console.log( $('.tankContainer_' + App.mySocketId) );
 
-            }
+            }*/
 
 
 
@@ -305,8 +322,6 @@
                     gameId: App.gameId,
                     hostSocketId: App.Player.hostSocketId
                 };
-
-
 
                 IO.socket.emit('hostBuildGame', data);
             }
@@ -485,6 +500,14 @@
                     }
                 }
 
+            },
+
+            playerDisconnect: function(mySocketId) {
+                $('.tankContainer_'+ mySocketId ).remove();
+            },
+
+            gameDisconnect: function() {
+                $('#gameFieldArea').remove();
             },
 
 

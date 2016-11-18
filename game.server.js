@@ -38,23 +38,24 @@ exports.initGame = function(sio, socket){
     gameSocket.on('playerStop', playerStop);
     //gameSocket.on('regularUpdateCoordination', regularUpdateCoordination);
 
+    gameSocket.on('disconnect', playerDisconnect);
+
 }
 
 
 function hostCreateNewGame() {
 
     var thisGameId = ( Math.random()*10000 ) | 0;
-    // var game = {};
-    // game.
-    // games.push(thisGameId);
     this.emit('newGameCreated', { gameId: thisGameId, mySocketId: this.id});
     this.join(thisGameId.toString());
 }
 
+                                                // HOST
 function hostBuildGame(data) {
 
-    //var gamesNum = games.length;
-
+    this.playerSocketId = data.mySocketId;
+    this.gameId = data.gameId;
+    this.myNum = 0;
 
     var newGame = {};
     newGame.gameName = data.gameName;
@@ -66,8 +67,8 @@ function hostBuildGame(data) {
     newGame.gameId = data.gameId;
     newGame.hostSocketId = data.hostSocketId;
 
-    games[data.gameId] = {};
-    games[data.gameId] = newGame;
+    games[this.gameId] = {};
+    games[this.gameId] = newGame;
 
 
     var newPlayer = {};
@@ -80,21 +81,28 @@ function hostBuildGame(data) {
     newPlayer.reloading = true;
     newPlayer.bullets = [null, null];
     newPlayer.mySocketId = data.hostSocketId;
+    //console.log(newPlayer.mySocketId);
 
-    players[data.gameId] = [];
-    players[data.gameId].push(newPlayer);
+    players[this.gameId] = [];
+    //players[data.gameId].push(newPlayer);
+    players[this.gameId][0] = newPlayer;
 
-    io.sockets.in(this.gameId).emit('buildedGame', { game: newGame, player: newPlayer, playerActive: 0, players: players[data.gameId] });
+    io.sockets.in(this.gameId).emit('buildedGame', { game: newGame, player: newPlayer, playerActive: 0, players: players[this.gameId] });
+    incTracking();
 
-    (function incTracking(){
+    function incTracking(){
         var timeout = setInterval(function(){
-            if (!games[data.gameId]) { clearInterval(timeout); }
-            games[data.gameId].tracking[1] +=1;
-            if (games[data.gameId].tracking[1] === 60) { games[data.gameId].tracking[1] = 0;
-                games[data.gameId].tracking[0] +=1;
+            if (games[data.gameId] === undefined) { clearInterval(timeout); }
+            else {
+                games[data.gameId].tracking[1] +=1;
+                if (games[data.gameId].tracking[1] === 60) { games[data.gameId].tracking[1] = 0;
+                    games[data.gameId].tracking[0] +=1;
+
+                }
+                incTracking();
             }
         }, 60000);
-    })();
+    }
 }
 
 
@@ -104,48 +112,77 @@ function getGames() {
 }
 
 
-
+                                                    // PLAYER
 function playerJoinGame(data) {
     //var gameNum = getGameIdNum(data.gameId);
+    var sock = this;
+    var room = gameSocket.manager.rooms["/" + data.gameId];
+    this.playerSocketId = data.mySocketId;
+    this.gameId = data.gameId;
+
+
     var passCheck;
     var newPlayer = {};
+    var empty;
 
-    if ( data.password === games[data.gameId].password ) {
-        passCheck = true;
+    if( room != undefined ){
 
-        newPlayer.playerName = data.playerName;
-        newPlayer.posX = positions[players[data.gameId].length].posX;
-        newPlayer.posY = positions[players[data.gameId].length].posY;
-        newPlayer.course = positions[players[data.gameId].length].course;
-        newPlayer.kill = 0;
-        newPlayer.dead = 0;
-        newPlayer.reloading = true;
-        newPlayer.bullets = [null, null];
-        newPlayer.mySocketId = data.mySocketId;
-        players[data.gameId].push( newPlayer );
+        if ( data.password === games[this.gameId].password ) {
+            passCheck = true;
 
-    } else { passCheck = false; }
+            for (var i = 0; i < 4; i++) {
+                if ( players[this.gameId][i] === undefined && empty === undefined ) {
+                    empty = i;
+                }
+            }
+            console.log(empty);
 
-    io.sockets.in(this.gameId).emit('playerJoinedGame', { passCheck: passCheck,
-                                                          player: newPlayer,
-                                                          playerActive: players[data.gameId].length-1,
-                                                          players: players[data.gameId],
-                                                          gameId: data.gameId,
-                                                          hostSocketId: games[data.gameId].hostSocketId 
-                                                      });
+            if (!this.myNum) { this.myNum = empty; }
+
+            data.mySocketId = sock.id;
+            sock.join(data.gameId);
+
+            games[data.gameId].players +=1;
+
+            newPlayer.playerName = data.playerName;
+            newPlayer.posX = positions[empty].posX;
+            newPlayer.posY = positions[empty].posY;
+            newPlayer.course = positions[empty].course;
+            newPlayer.kill = 0;
+            newPlayer.dead = 0;
+            newPlayer.reloading = true;
+            newPlayer.bullets = [null, null];
+            newPlayer.mySocketId = data.mySocketId;
+            players[this.gameId][empty] = newPlayer;
+
+            // players[data.gameId].push( newPlayer );
+
+        } else { passCheck = false; }
+
+        io.sockets.in(this.gameId).emit('playerJoinedGame', { passCheck: passCheck,
+                                                              player: newPlayer,
+                                                              playerActive: empty,
+                                                              players: players[this.gameId],
+                                                              //gameId: data.gameId,
+                                                              hostSocketId: games[data.gameId].hostSocketId
+                                                          });
+    } else {
+        this.emit('error',{message: "This room does not exist."} );
+    }
 
 }
 
 function playerRun(data) {
     // console.log( players[data.gameId] );
-    players[data.gameId][data.playerNum].course = data.player.course;
-    io.sockets.in(this.gameId).emit('playerRuned', { player: players[data.gameId][data.playerNum], playerNum: data.playerNum, players: players[data.gameId] });
+    // console.log( data.playerNum );
+    players[this.gameId][data.playerNum].course = data.player.course;
+    io.sockets.in(this.gameId).emit('playerRuned', { player: players[this.gameId][data.playerNum], playerNum: data.playerNum, players: players[this.gameId] });
 }
 
 function playerStop(data) {
-    players[data.gameId][data.playerNum].posX = data.player.posX;
-    players[data.gameId][data.playerNum].posY = data.player.posY;
-    io.sockets.in(this.gameId).emit('playerStoped', { player: players[data.gameId][data.playerNum], playerNum: data.playerNum, players: players[data.gameId] });
+    players[this.gameId][data.playerNum].posX = data.player.posX;
+    players[this.gameId][data.playerNum].posY = data.player.posY;
+    io.sockets.in(this.gameId).emit('playerStoped', { player: players[this.gameId][data.playerNum], playerNum: data.playerNum, players: players[this.gameId] });
 }
 
 
@@ -153,14 +190,47 @@ function playerStop(data) {
 
 
 
-function playerDisconnect() {
-    console.log( this.mySocketId );
-}
+function playerDisconnect(data) {
 
+    if ( this.gameId !== undefined ) {
+        // console.log(this.gameId);
+
+        games[this.gameId].players -=1;
+
+        players[this.gameId][this.myNum] = undefined;
+
+        if ( games[this.gameId].players === 0 ) {
+
+            io.sockets.in(this.gameId).emit('refreshGameAfterDisconnect');
+            delete games[this.gameId];
+            delete players[this.gameId];
+        } else {
+            io.sockets.in(this.gameId).emit('refreshPlayerAfterDisconnect', { playerNum: this.myNum, players: players[this.gameId]});
+
+            /*if ( this.myNum !== players.length ) {
+
+                var numNew = players[this.gameId].length;
+                var newOld = this.myNum;
+
+                (function refreshPosition(){
+                    var stek = positions[newOld];
+                    positions[newOld] = positions[numNew];
+                    positions[numNew] = stek;
+                })();
+
+            }*/
+            //console.log(players[data.gameId]);
+        }
+
+
+
+    }
+
+}
 
 // ----------------------------------------------------------------------------------------------------------- //
 
-function getGameIdNum(gameId) {
+/*function getGameIdNum(gameId) {
     var gameIdIndex;
     for (var i = 0, l = games.length; i < l; i++) {
         (function(e){
@@ -175,7 +245,7 @@ function getGameIdNum(gameId) {
 
 function regularUpdateCoordination(data) {
     players = data.players.slice();
-}
+}*/
 
 
 
