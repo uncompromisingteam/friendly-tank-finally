@@ -471,6 +471,22 @@
 
             },
 
+            regularUpdateCoordination: function() {
+                var timeout;
+                return {
+                    update: function(){
+                        var timeout = setTimeout(function(){
+                            IO.socket.emit('regularUpdateCoordination', {players: App.Player.players});
+                            App.Player.regularUpdateCoordination().update();
+                        }, 500);
+                    },
+                    stopUpdate: function(){
+                        clearTimeout(timeout);
+                    }
+                }
+
+            },
+
 
             getCourseURL: function(course) {
                 if ( course === 'left' ) { return App.Player.$courseLeft };
