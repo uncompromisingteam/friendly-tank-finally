@@ -64,6 +64,7 @@
             App.drawingLevel();
 
             App.controlGame(data);
+            //App.Player.regularUpdateCoordination().update();
         },
 
         playerJoinedGame: function(data){
@@ -87,14 +88,10 @@
         },
 
         playerStoped: function(data) {
-            App.Player.players = data.players.slice();
             App.Player.refreshAfterRun(data).stop();
+            App.Player.players = data.players.slice();
             App.Player.canRun = true;
         }
-
-
-
-
 
 
     };
@@ -280,7 +277,7 @@
                                                                                          .append( $('<div/>').addClass('gameListPassword').html('Password') )
                                                         );
 
-                for (var i = 0, l = gamesList.length; i < l; i++) {
+                for (var i in gamesList) {
 
                     var track = ( gamesList[i].tracking[1]<10 ) ? ( '0' + gamesList[i].tracking[0] + 'h:0' +  gamesList[i].tracking[1] + 'm' )
                                                                 : ( '0' + gamesList[i].tracking[0] + 'h:' +  gamesList[i].tracking[1] + 'm' );
@@ -463,7 +460,7 @@
 
             refreshAfterRun: function(data) {
                 var data = data;
-                console.log( App.gameId );
+                //console.log( App.gameId );
 
                 var refresh = function(){
                     App.Player.refreshAnimateFrameID[data.playerNum] = requestAnimationFrame(refresh);
@@ -490,30 +487,26 @@
                     },
                     stop: function() {
                         window.cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
-                        //App.Player.refreshAnimateFrameID.splice(data.playerNum, 1);
+                        App.Player.refreshAnimateFrameID.splice(data.playerNum, 1);
                         // console.log(App.Player.refreshAnimateFrameID[data.playerNum]);
                     }
                 }
 
-                // function run() {
-                //
-                //     App.Player.refreshAnimateFrameID[data.playerNum] = requestAnimationFrame(refresh);
-                //
-                //     var dt = 0.017;
-                //
-                //     if ( App.Player.players[data.playerNum].course === 'right' ) { App.Player.players[data.playerNum].posX += App.Player.speedPlayer*dt; }
-                //     if ( App.Player.players[data.playerNum].course === 'left' ) { App.Player.players[data.playerNum].posX -= App.Player.speedPlayer*dt; }
-                //     if ( App.Player.players[data.playerNum].course === 'top' ) { App.Player.players[data.playerNum].posY -= App.Player.speedPlayer*dt; }
-                //     if ( App.Player.players[data.playerNum].course === 'bottom' ) { App.Player.players[data.playerNum].posY += App.Player.speedPlayer*dt; }
-                //
-                //
-                //     $('.tankContainer_'+ App.Player.players[data.playerNum].mySocketId ).css({'left': App.Player.players[data.playerNum].posX + 'px',
-                //                                                                     'top': App.Player.players[data.playerNum].posY + 'px',
-                //                                                                     'background-image':  App.Player.getCourseURL(data.player.course)
-                //                                                                 });
-                //
-                //     if (App.mySocketId === App.Player.players[data.playerNum].mySocketId) { App.Player.windowRotate(); }
-                // }
+            },
+
+            regularUpdateCoordination: function() {
+                var timeout;
+                return {
+                    update: function(){
+                        var timeout = setTimeout(function(){
+                            IO.socket.emit('regularUpdateCoordination', {players: App.Player.players});
+                            App.Player.regularUpdateCoordination().update();
+                        }, 500);
+                    },
+                    stopUpdate: function(){
+                        clearTimeout(timeout);
+                    }
+                }
 
             },
 
