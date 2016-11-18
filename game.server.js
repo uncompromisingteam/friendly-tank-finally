@@ -36,7 +36,7 @@ exports.initGame = function(sio, socket){
     //player events
     gameSocket.on('playerRun', playerRun);
     gameSocket.on('playerStop', playerStop);
-    gameSocket.on('regularUpdateCoordination', regularUpdateCoordination);
+    //gameSocket.on('regularUpdateCoordination', regularUpdateCoordination);
 
 }
 
@@ -84,7 +84,7 @@ function hostBuildGame(data) {
     players[data.gameId] = [];
     players[data.gameId].push(newPlayer);
 
-    io.sockets.in(this.gameId).emit('buildedGame', { game: games[data.gameId], player: newPlayer, playerActive: 0, players: players[data.gameId] });
+    io.sockets.in(this.gameId).emit('buildedGame', { game: newGame, player: newPlayer, playerActive: 0, players: players[data.gameId] });
 
     (function incTracking(){
         var timeout = setInterval(function(){
@@ -126,7 +126,13 @@ function playerJoinGame(data) {
 
     } else { passCheck = false; }
 
-    io.sockets.in(this.gameId).emit('playerJoinedGame', { passCheck: passCheck, player: newPlayer, playerActive: players[data.gameId].length-1, players: players[data.gameId], gameId: data.gameId });
+    io.sockets.in(this.gameId).emit('playerJoinedGame', { passCheck: passCheck,
+                                                          player: newPlayer,
+                                                          playerActive: players[data.gameId].length-1,
+                                                          players: players[data.gameId],
+                                                          gameId: data.gameId,
+                                                          hostSocketId: games[data.gameId].hostSocketId 
+                                                      });
 
 }
 
@@ -144,9 +150,7 @@ function playerStop(data) {
 
 
 
-function regularUpdateCoordination(data) {
-    players = data.players.slice();
-}
+
 
 
 function playerDisconnect() {
@@ -154,7 +158,7 @@ function playerDisconnect() {
 }
 
 
-
+// ----------------------------------------------------------------------------------------------------------- //
 
 function getGameIdNum(gameId) {
     var gameIdIndex;
@@ -167,6 +171,10 @@ function getGameIdNum(gameId) {
     }
 
     return gameIdIndex;
+}
+
+function regularUpdateCoordination(data) {
+    players = data.players.slice();
 }
 
 

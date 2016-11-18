@@ -29,17 +29,9 @@
 
             IO.socket.on('playerRuned', IO.playerRuned);
             IO.socket.on('playerStoped', IO.playerStoped);
+            IO.socket.on('regularUpdatedCoordination', IO.regularUpdatedCoordination);
 
             IO.socket.on('buildedGame', IO.buildedGame);
-
-
-            //IO.socket.on('playerUpdated', IO.playerUpdated);
-            //IO.socket.on('playerFired', IO.playerFired);
-
-            //IO.socket.on('refreshAfterDead', IO.refreshAfterDead);
-
-            //IO.socket.on('refreshAfterDisconnect', IO.refreshAfterDisconnect);
-            //IO.socket.on('refreshBullets', IO.refreshBullets);
         },
 
         onConnected: function(data) {
@@ -91,6 +83,10 @@
             App.Player.refreshAfterRun(data).stop();
             App.Player.players = data.players.slice();
             App.Player.canRun = true;
+        },
+
+        regularUpdatedCoordination: function(data) {
+            App.Player.players = data.players.slice();
         }
 
 
@@ -212,7 +208,9 @@
 
             if ( data.player.mySocketId === App.mySocketId && data.playerActive !== 0) {
                 App.$gameArea.html( App.$gameFieldTemplate );
+                App.hostSocketId = data.hostSocketId;
                 App.drawingLevel();
+
                 //App.gameId = data.gameId;
                 for (var i = 0, l = data.players.length; i < l; i++) {
                     (function(e){
@@ -298,12 +296,14 @@
             onBuildClick: function() {
                 //App.$gameArea.html( App.$gameFieldTemplate );
                 //console.log("Asdasd");
+                App.Player.hostSocketId = App.mySocketId;
+
                 var data = {
                     gameName: $('#inputGameName').val(),
                     playerName: $('#inputYourNickname').val() || 'anon',
                     password: $('#inputPassword').val(),
                     gameId: App.gameId,
-                    hostSocketId: App.mySocketId
+                    hostSocketId: App.Player.hostSocketId
                 };
 
 
@@ -433,28 +433,6 @@
                     });
                 }
 
-                // App.$doc.on('keyup', function(){
-                //     IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
-                // });
-
-
-
-                // function runRightTank() {
-                //     runAnimateFrameID = requestAnimationFrame(runRightTank);
-                //
-                //     var dt = 0.017;
-                //
-                //     App.Player.players[App.Player.playerActive].course = 'right';
-                //
-                //         App.Player.players[App.Player.playerActive].posX += App.Player.speedPlayer*dt;
-                //         $(".tankContainer_" + App.Player.players[App.Player.playerActive].mySocketId).css({'left': App.Player.players[App.Player.playerActive].posX + 'px',
-                //                                                                                            'background-image':  App.Player.getCourseURL(App.Player.players[App.Player.playerActive].course)
-                //                                                                                        });
-                //
-                //         IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
-                //
-                // }
-
 
             },
 
@@ -488,27 +466,11 @@
                     stop: function() {
                         window.cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
                         App.Player.refreshAnimateFrameID.splice(data.playerNum, 1);
-                        // console.log(App.Player.refreshAnimateFrameID[data.playerNum]);
                     }
                 }
 
             },
 
-            regularUpdateCoordination: function() {
-                var timeout;
-                return {
-                    update: function(){
-                        var timeout = setTimeout(function(){
-                            IO.socket.emit('regularUpdateCoordination', {players: App.Player.players});
-                            App.Player.regularUpdateCoordination().update();
-                        }, 500);
-                    },
-                    stopUpdate: function(){
-                        clearTimeout(timeout);
-                    }
-                }
-
-            },
 
             getCourseURL: function(course) {
                 if ( course === 'left' ) { return App.Player.$courseLeft };
