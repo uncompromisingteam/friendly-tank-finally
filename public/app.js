@@ -100,7 +100,7 @@
 
         regularUpdatedCoordination: function(data) {
             App.Player.players = data.players.slice();
-            App.Player.refreshPlayerAfterRegularUpdate();
+            //App.Player.refreshPlayerAfterRegularUpdate();
         },
 
         refreshPlayerAfterDisconnect: function(data) {
@@ -510,6 +510,7 @@
                     stop: function() {
 
                         window.cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
+                        IO.socket.emit('regularUpdateCoordination', { players: App.Player.players });
                         // App.Player.refreshAnimateFrameID[data.playerNum] = undefined;
                         //console.log(App.Player.refreshAnimateFrameID);
                         //App.Player.refreshAnimateFrameID = 0;
