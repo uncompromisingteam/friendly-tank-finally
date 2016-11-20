@@ -36,7 +36,7 @@ exports.initGame = function(sio, socket){
     //player events
     gameSocket.on('playerRun', playerRun);
     gameSocket.on('playerStop', playerStop);
-    //gameSocket.on('regularUpdateCoordination', regularUpdateCoordination);
+    gameSocket.on('regularUpdateCoordination', regularUpdateCoordination);
 
     gameSocket.on('disconnect', playerDisconnect);
 
@@ -226,6 +226,11 @@ function playerDisconnect(data) {
 
     }
 
+}
+
+function regularUpdateCoordination(data) {
+    players[this.gameId] = data.players.slice();
+    io.sockets.in(this.gameId).emit('regularUpdatedCoordination', { players: players[this.gameId] });
 }
 
 // ----------------------------------------------------------------------------------------------------------- //

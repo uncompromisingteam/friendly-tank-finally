@@ -29,6 +29,7 @@
 
             IO.socket.on('playerRuned', IO.playerRuned);
             IO.socket.on('playerStoped', IO.playerStoped);
+
             IO.socket.on('regularUpdatedCoordination', IO.regularUpdatedCoordination);
 
             IO.socket.on('refreshPlayerAfterDisconnect', IO.refreshPlayerAfterDisconnect);
@@ -52,15 +53,21 @@
         },
 
         buildedGame: function(data) {
-            //App.Player.createGameField();
+
             App.Player.players = data.players.slice();
             App.Player.playerActive = data.playerActive;
 
             App.$gameArea.html( App.$gameFieldTemplate );
             App.drawingLevel();
 
-            //App.controlGame(data);
             App.Player.createPlayer( App.Player.players[data.playerActive] );
+
+            App.Player.createStatisticPlayer({ num: data.playerActive,
+                                                playerName: App.Player.players[data.playerActive].playerName,
+                                                kill: App.Player.players[data.playerActive].kill,
+                                                dead: App.Player.players[data.playerActive].dead
+                                            });
+
             //App.Player.regularUpdateCoordination().update();
         },
 
@@ -87,12 +94,13 @@
 
         playerStoped: function(data) {
             App.Player.refreshAfterRun(data).stop();
-            App.Player.players = data.players.slice();
+            //App.Player.players = data.players.slice();
             App.Player.canRun = true;
         },
 
         regularUpdatedCoordination: function(data) {
             App.Player.players = data.players.slice();
+            App.Player.refreshPlayerAfterRegularUpdate();
         },
 
         refreshPlayerAfterDisconnect: function(data) {
@@ -232,8 +240,16 @@
                 for (var i = 0, l = data.players.length; i < l; i++) {
                     (function(e){
                         App.Player.createPlayer(data.players[e]);
+
+                        App.Player.createStatisticPlayer({ num: e,
+                                                           playerName: data.players[e].playerName,
+                                                           kill: data.players[e].kill,
+                                                           dead: data.players[e].dead
+                                                        });
+
                     })(i);
                 }
+
             /*} else {
                 App.Player.createPlayer( App.Player.players[data.playerActive] );
                 //console.log( $('.tankContainer_' + App.mySocketId) );
@@ -342,7 +358,7 @@
             speedPlayer: 300,
             playerActive: null,
             canRun: true,
-            refreshAnimateFrameID: [],
+            refreshAnimateFrameID: [undefined, undefined, undefined, undefined],
             selectGameId: null,
 
             onJoinClick: function() {
@@ -399,6 +415,15 @@
                 App.Player.windowRotate();
             },
 
+            createStatisticPlayer: function(data) {
+
+                $("#statContainer").append( $('<div/>').addClass('statContainerItem statItem' + data.num)
+                                                       .append( $('<div/>').addClass('statContainerItemName').text( data.playerName))
+                                                       .append( $('<div/>').addClass('statContainerItemKill').text( 'Kill:' + data.kill))
+                                                       .append( $('<div/>').addClass('statContainerItemDead').text( 'Dead:' + data.dead))
+                                    );
+            },
+
             windowRotate: function() {
                 $("#gameFieldAreaWrapper").css({ 'left':  $("#gameArea").width()/2 - App.Player.players[App.Player.playerActive].posX +'px', 'top':  $("#gameArea").height()/2 - App.Player.players[App.Player.playerActive].posY +'px' });
             },
@@ -413,6 +438,7 @@
                     IO.socket.emit('playerRun', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
                     App.$doc.on('keyup', function(){
                         IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                        //App.Player.refreshAfterRun({playerNum: App.Player.playerActive}).stop();
                     });
 
                 }
@@ -422,6 +448,7 @@
                     IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
                     App.$doc.on('keyup', function(){
                         IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                        //App.Player.refreshAfterRun({playerNum: App.Player.playerActive}).stop();
                     });
                 }
                 if ((eventObject.keyCode === 38) && (App.Player.canRun === true) ) {
@@ -430,6 +457,7 @@
                     IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
                     App.$doc.on('keyup', function(){
                         IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                        //App.Player.refreshAfterRun({playerNum: App.Player.playerActive}).stop();
                     });
                 }
                 if ((eventObject.keyCode === 40) && (App.Player.canRun === true) ) {
@@ -438,6 +466,7 @@
                     IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
                     App.$doc.on('keyup', function(){
                         IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                        //App.Player.refreshAfterRun({playerNum: App.Player.playerActive}).stop();
                     });
                 }
 
@@ -453,9 +482,9 @@
 
             refreshAfterRun: function(data) {
                 var data = data;
-                //console.log( App.gameId );
 
                 var refresh = function(){
+
                     App.Player.refreshAnimateFrameID[data.playerNum] = requestAnimationFrame(refresh);
 
                     var dt = 0.017;
@@ -479,8 +508,12 @@
                         refresh();
                     },
                     stop: function() {
+
                         window.cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
-                        App.Player.refreshAnimateFrameID.splice(data.playerNum, 1);
+                        // App.Player.refreshAnimateFrameID[data.playerNum] = undefined;
+                        //console.log(App.Player.refreshAnimateFrameID);
+                        //App.Player.refreshAnimateFrameID = 0;
+                        //App.Player.refreshAnimateFrameID.splice(data.playerNum, 1);
                     }
                 }
 
@@ -490,8 +523,8 @@
                 var timeout;
                 return {
                     update: function(){
-                        var timeout = setTimeout(function(){
-                            IO.socket.emit('regularUpdateCoordination', {players: App.Player.players});
+                        timeout = setTimeout(function(){
+                            IO.socket.emit('regularUpdateCoordination', { players: App.Player.players });
                             App.Player.regularUpdateCoordination().update();
                         }, 500);
                     },
@@ -499,7 +532,29 @@
                         clearTimeout(timeout);
                     }
                 }
+            },
 
+            refreshPlayerAfterRegularUpdate: function() {
+                var refreshAnimateFrameID;
+                var dt = 0.017;
+                function refresh() {
+                    refreshAnimateFrameID = requestAnimationFrame(refresh);
+
+                    if ( App.Player.players[data.playerNum].course === 'right' ) { App.Player.players[data.playerNum].posX += App.Player.speedPlayer*dt; }
+                    if ( App.Player.players[data.playerNum].course === 'left' ) { App.Player.players[data.playerNum].posX -= App.Player.speedPlayer*dt; }
+                    if ( App.Player.players[data.playerNum].course === 'top' ) { App.Player.players[data.playerNum].posY -= App.Player.speedPlayer*dt; }
+                    if ( App.Player.players[data.playerNum].course === 'bottom' ) { App.Player.players[data.playerNum].posY += App.Player.speedPlayer*dt; }
+
+                    //if () {}
+
+
+                    $('.tankContainer_'+ App.Player.players[data.playerNum].mySocketId ).css({'left': App.Player.players[data.playerNum].posX + 'px',
+                                                                                    'top': App.Player.players[data.playerNum].posY + 'px',
+                                                                                    'background-image':  App.Player.getCourseURL(data.player.course)
+                                                                                });
+
+                    if (App.mySocketId === App.Player.players[data.playerNum].mySocketId) { App.Player.windowRotate(); }
+                }
             },
 
             playerDisconnect: function(mySocketId) {

@@ -374,7 +374,7 @@ html, body {
             display: none;
         }
 
-                #statFieldArea .logo {
+                .logo {
                     width: 146px;
                     height: 60px;
                     float:left;
@@ -383,12 +383,38 @@ html, body {
 
                 }
 
-                #statFieldArea .statContainer {
+                #statContainer {
                     width: auto;
                     height: 60px;
                     float:right;
-
                 }
+
+                        #statContainer .statContainerItem {
+                            width:170px;
+                            height: 60px;
+                            float:left;
+                            border-left:1px solid #000;
+                            color: #000;
+                            font-weight: bold;
+                        }
+
+                                #statContainer .statContainerItemName {
+                                    width:auto;
+                                    max-width: 120px;
+                                    min-width: 80px;
+                                    height: 60px;
+                                    float:left;
+                                    line-height:45px;
+                                    padding-left: 20px;
+                                }
+
+                                #statContainer .statContainerItemKill, #statContainer .statContainerItemDead {
+                                    margin-left: 10px;
+                                    width:50px;
+                                    height: 30px;
+                                    float:left;
+
+                                }
 
 
         #gameFieldAreaWrapper {
