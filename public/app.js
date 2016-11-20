@@ -511,7 +511,7 @@
 
                         window.cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
                         IO.socket.emit('regularUpdateCoordination', { players: App.Player.players });
-                        // App.Player.refreshAnimateFrameID[data.playerNum] = undefined;
+                        App.Player.refreshAnimateFrameID[data.playerNum] = undefined;
                         //console.log(App.Player.refreshAnimateFrameID);
                         //App.Player.refreshAnimateFrameID = 0;
                         //App.Player.refreshAnimateFrameID.splice(data.playerNum, 1);
