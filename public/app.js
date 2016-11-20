@@ -1,16 +1,16 @@
 ;jQuery(function($) {
     'use strict';
 
-    // window.requestAnimFrame = (function(){
-    //   return  window.requestAnimationFrame       ||
-    //           window.webkitRequestAnimationFrame ||
-    //           window.mozRequestAnimationFrame    ||
-    //           window.oRequestAnimationFrame      ||
-    //           window.msRequestAnimationFrame     ||
-    //           function(callback,  element){
-    //             window.setTimeout(callback, 1000 / 60);
-    //           };
-    // })();
+    window.requestAnimationFrame = (function(){
+      return  window.requestAnimationFrame       ||
+              window.webkitRequestAnimationFrame ||
+              window.mozRequestAnimationFrame    ||
+              window.oRequestAnimationFrame      ||
+              window.msRequestAnimationFrame     ||
+              function(callback,  element){
+                window.setTimeout(callback, 1000 / 60);
+              };
+    })();
 
     var IO = {
 
@@ -358,7 +358,7 @@
             speedPlayer: 300,
             playerActive: null,
             canRun: true,
-            refreshAnimateFrameID: [undefined, undefined, undefined, undefined],
+            refreshAnimateFrameID: [window.requestAnimationFrame, window.requestAnimationFrame, window.requestAnimationFrame, window.requestAnimationFrame],
             selectGameId: null,
 
             onJoinClick: function() {
