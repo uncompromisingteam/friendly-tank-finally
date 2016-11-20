@@ -1,16 +1,16 @@
 ;jQuery(function($) {
     'use strict';
 
-    window.requestAnimFrame = (function(){
-      return  window.requestAnimationFrame       ||
-              window.webkitRequestAnimationFrame ||
-              window.mozRequestAnimationFrame    ||
-              window.oRequestAnimationFrame      ||
-              window.msRequestAnimationFrame     ||
-              function(callback,  element){
-                window.setTimeout(callback, 1000 / 60);
-              };
-    })();
+    // window.requestAnimFrame = (function(){
+    //   return  window.requestAnimationFrame       ||
+    //           window.webkitRequestAnimationFrame ||
+    //           window.mozRequestAnimationFrame    ||
+    //           window.oRequestAnimationFrame      ||
+    //           window.msRequestAnimationFrame     ||
+    //           function(callback,  element){
+    //             window.setTimeout(callback, 1000 / 60);
+    //           };
+    // })();
 
     var IO = {
 
@@ -509,9 +509,9 @@
                     },
                     stop: function() {
 
-                        window.cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
+                        cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
                         IO.socket.emit('regularUpdateCoordination', { players: App.Player.players });
-                        App.Player.refreshAnimateFrameID[data.playerNum] = undefined;
+                        //App.Player.refreshAnimateFrameID[data.playerNum] = undefined;
                         //console.log(App.Player.refreshAnimateFrameID);
                         //App.Player.refreshAnimateFrameID = 0;
                         //App.Player.refreshAnimateFrameID.splice(data.playerNum, 1);
