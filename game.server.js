@@ -176,13 +176,15 @@ function playerRun(data) {
     // console.log( players[data.gameId] );
     // console.log( data.playerNum );
     players[this.gameId][data.playerNum].course = data.player.course;
-    io.sockets.in(this.gameId).emit('playerRuned', { player: players[this.gameId][data.playerNum], playerNum: data.playerNum, players: players[this.gameId] });
+    // io.sockets.in(this.gameId).emit('playerRuned', { player: players[this.gameId][data.playerNum], playerNum: data.playerNum });
+    io.sockets.in(this.gameId).emit('playerRuned', { player: data.player, playerNum: data.playerNum });
 }
 
 function playerStop(data) {
     players[this.gameId][data.playerNum].posX = data.player.posX;
     players[this.gameId][data.playerNum].posY = data.player.posY;
-    io.sockets.in(this.gameId).emit('playerStoped', { player: players[this.gameId][data.playerNum], playerNum: data.playerNum, players: players[this.gameId] });
+    // io.sockets.in(this.gameId).emit('playerStoped', { player: players[this.gameId][data.playerNum], playerNum: data.playerNum });
+    io.sockets.in(this.gameId).emit('playerStoped', { player: data.player, playerNum: data.playerNum });
 }
 
 
@@ -230,7 +232,7 @@ function playerDisconnect(data) {
 
 function regularUpdateCoordination(data) {
     players[this.gameId] = data.players.slice();
-    io.sockets.in(this.gameId).emit('regularUpdatedCoordination', { players: players[this.gameId] });
+    io.sockets.in(this.gameId).emit('regularUpdatedCoordination', { playerNum: data.playerNum, players: players[this.gameId] });
 }
 
 // ----------------------------------------------------------------------------------------------------------- //

@@ -88,14 +88,17 @@
         },
 
         playerRuned: function(data){
-            App.Player.players = data.players.slice();
+            //App.Player.players = data.players.slice();
+            App.Player.players[data.playerNum] = data.player;
             App.Player.refreshAfterRun(data).run();
         },
 
         playerStoped: function(data) {
             App.Player.refreshAfterRun(data).stop();
             //App.Player.players = data.players.slice();
-            App.Player.canRun = true;
+            //App.Player.players[data.playerNum] = data.player;
+            App.Player.canRun[data.playerNum] = true;
+            //App.Player.canRun = true;
         },
 
         regularUpdatedCoordination: function(data) {
@@ -125,6 +128,13 @@
         myRole: '',
         gameStatus: null,
         mySocketId: '',
+        arrowCodes: {
+            37: 'left',
+            38: 'top',
+            39: 'right',
+            40: 'bottom',
+            27: 'esc'
+        },
         levelPlan : [
           "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww",   // (1)
           "w                 wwww                 w",   // (2)
@@ -357,8 +367,8 @@
             speedBullet: 400,
             speedPlayer: 300,
             playerActive: null,
-            canRun: true,
-            refreshAnimateFrameID: [window.requestAnimationFrame, window.requestAnimationFrame, window.requestAnimationFrame, window.requestAnimationFrame],
+            canRun: [true, true, true, true],
+            refreshAnimateFrameID: [],
             selectGameId: null,
 
             onJoinClick: function() {
@@ -430,43 +440,37 @@
 
             runPlayerEvent: function(eventObject) {
 
-                var runAnimateFrameID;
-
-                if ((eventObject.keyCode === 39) && (App.Player.canRun === true) ) {
-                    App.Player.canRun = false;
+                if ((eventObject.keyCode === 39) && (App.Player.canRun[App.Player.playerActive] === true) ) {
+                    App.Player.canRun[App.Player.playerActive] = false;
                     App.Player.players[App.Player.playerActive].course = 'right';
-                    IO.socket.emit('playerRun', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    IO.socket.emit('playerRun', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive });
                     App.$doc.on('keyup', function(){
-                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
-                        //App.Player.refreshAfterRun({playerNum: App.Player.playerActive}).stop();
+                        IO.socket.emit('playerStop', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive });
                     });
 
                 }
-                if ((eventObject.keyCode === 37) && (App.Player.canRun === true) ) {
-                    App.Player.canRun = false;
+                if ((eventObject.keyCode === 37) && (App.Player.canRun[App.Player.playerActive] === true) ) {
+                    App.Player.canRun[App.Player.playerActive] = false;
                     App.Player.players[App.Player.playerActive].course = 'left';
-                    IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
                     App.$doc.on('keyup', function(){
-                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
-                        //App.Player.refreshAfterRun({playerNum: App.Player.playerActive}).stop();
+                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
                     });
                 }
-                if ((eventObject.keyCode === 38) && (App.Player.canRun === true) ) {
-                    App.Player.canRun = false;
+                if ((eventObject.keyCode === 38) && (App.Player.canRun[App.Player.playerActive] === true) ) {
+                    App.Player.canRun[App.Player.playerActive] = false;
                     App.Player.players[App.Player.playerActive].course = 'top';
-                    IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
                     App.$doc.on('keyup', function(){
-                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
-                        //App.Player.refreshAfterRun({playerNum: App.Player.playerActive}).stop();
+                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
                     });
                 }
-                if ((eventObject.keyCode === 40) && (App.Player.canRun === true) ) {
-                    App.Player.canRun = false;
+                if ((eventObject.keyCode === 40) && (App.Player.canRun[App.Player.playerActive] === true) ) {
+                    App.Player.canRun[App.Player.playerActive] = false;
                     App.Player.players[App.Player.playerActive].course = 'bottom';
-                    IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
+                    IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
                     App.$doc.on('keyup', function(){
-                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive, gameId: App.gameId});
-                        //App.Player.refreshAfterRun({playerNum: App.Player.playerActive}).stop();
+                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
                     });
                 }
 
@@ -510,7 +514,8 @@
                     stop: function() {
 
                         cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
-                        IO.socket.emit('regularUpdateCoordination', { players: App.Player.players });
+                        //App.Player.players = data.players.slice();
+                        //IO.socket.emit('regularUpdateCoordination', { players: App.Player.players, playerNum: data.playerNum });
                         //App.Player.refreshAnimateFrameID[data.playerNum] = undefined;
                         //console.log(App.Player.refreshAnimateFrameID);
                         //App.Player.refreshAnimateFrameID = 0;
@@ -520,8 +525,15 @@
 
             },
 
-            regularUpdateCoordination: function() {
-                var timeout;
+            regularUpdateCoordination: function(data) {
+
+                    $('.tankContainer_'+ App.Player.players[data.playerNum].mySocketId ).css({  'left': App.Player.players[data.playerNum].posX + 'px',
+                                                                                                'top': App.Player.players[data.playerNum].posY + 'px'
+                                                                                        });
+
+
+
+                /*var timeout;
                 return {
                     update: function(){
                         timeout = setTimeout(function(){
@@ -532,7 +544,7 @@
                     stopUpdate: function(){
                         clearTimeout(timeout);
                     }
-                }
+                }*/
             },
 
             refreshPlayerAfterRegularUpdate: function() {
