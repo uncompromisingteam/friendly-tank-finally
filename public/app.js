@@ -97,7 +97,7 @@
             App.Player.refreshAfterRun(data).stop();
             //App.Player.players = data.players.slice();
             //App.Player.players[data.playerNum] = data.player;
-            App.Player.canRun[data.playerNum] = true;
+            // App.Player.canRun[data.playerNum] = true;
             //App.Player.canRun = true;
         },
 
@@ -177,6 +177,7 @@
             App.bindEvents();
 
             FastClick.attach(document.body);
+
         },
 
         cacheElements: function() {
@@ -222,6 +223,8 @@
             App.$doc.on('click', '#btnStart', App.Player.onPlayerStartClick);
 
             App.$doc.on('keydown', App.Player.runPlayerEvent );
+            // window.addEventListener('keydown', App.Player.runPlayerEvent().getPressed );
+            // window.addEventListener('keyup', App.Player.runPlayerEvent().getPressed );
 
             window.addEventListener('resize', App.resize);
 
@@ -367,7 +370,7 @@
             speedBullet: 400,
             speedPlayer: 300,
             playerActive: null,
-            canRun: [true, true, true, true],
+            canRun: true,
             refreshAnimateFrameID: [],
             selectGameId: null,
 
@@ -440,37 +443,60 @@
 
             runPlayerEvent: function(eventObject) {
 
-                if ((eventObject.keyCode === 39) && (App.Player.canRun[App.Player.playerActive] === true) ) {
-                    App.Player.canRun[App.Player.playerActive] = false;
+                /*var pressed = Object.create(null);
+
+                return {
+                    hundler: function (event) {
+                        if (App.arrowCodes.hasOwnProperty(event.keyCode)) {
+                            var down = event.type == "keydown";
+                            pressed[App.arrowCodes[event.keyCode]] = down;
+                            event.preventDefault();
+                        }
+                    },
+                    getPressed: function(event) {
+                        App.Player.runPlayerEvent().hundler(event);
+                        console.log(pressed);
+                        return pressed;
+                    }
+                }*/
+
+                if ((eventObject.keyCode === 39) && (App.Player.canRun === true) ) {
+                    console.log('right');
+                    App.Player.canRun = false;
                     App.Player.players[App.Player.playerActive].course = 'right';
                     IO.socket.emit('playerRun', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive });
                     App.$doc.on('keyup', function(){
                         IO.socket.emit('playerStop', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive });
+                        App.Player.canRun = true;
                     });
 
                 }
-                if ((eventObject.keyCode === 37) && (App.Player.canRun[App.Player.playerActive] === true) ) {
-                    App.Player.canRun[App.Player.playerActive] = false;
+                if ((eventObject.keyCode === 37) && (App.Player.canRun === true) ) {
+                    console.log('left');
+                    App.Player.canRun = false;
                     App.Player.players[App.Player.playerActive].course = 'left';
                     IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
                     App.$doc.on('keyup', function(){
                         IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
+                        App.Player.canRun = true;
                     });
                 }
-                if ((eventObject.keyCode === 38) && (App.Player.canRun[App.Player.playerActive] === true) ) {
-                    App.Player.canRun[App.Player.playerActive] = false;
+                if ((eventObject.keyCode === 38) && (App.Player.canRun === true) ) {
+                    App.Player.canRun = false;
                     App.Player.players[App.Player.playerActive].course = 'top';
                     IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
                     App.$doc.on('keyup', function(){
                         IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
+                        App.Player.canRun = true;
                     });
                 }
-                if ((eventObject.keyCode === 40) && (App.Player.canRun[App.Player.playerActive] === true) ) {
-                    App.Player.canRun[App.Player.playerActive] = false;
+                if ((eventObject.keyCode === 40) && (App.Player.canRun === true) ) {
+                    App.Player.canRun = false;
                     App.Player.players[App.Player.playerActive].course = 'bottom';
                     IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
                     App.$doc.on('keyup', function(){
                         IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
+                        App.Player.canRun = true;
                     });
                 }
 
@@ -480,7 +506,6 @@
                         $("#statFieldArea").css({'display': 'none'});
                     });
                 }
-
 
             },
 
