@@ -522,8 +522,6 @@
 
                     var dt = 0.017;
 
-
-
                     if ( (App.Player.players[data.playerNum].course === 'right') && (App.Player.checkStepRun(App.Player.players[data.playerNum]).right() === true) ) { App.Player.players[data.playerNum].posX += App.Player.speedPlayer*dt; }
                     if ( (App.Player.players[data.playerNum].course === 'left') && (App.Player.checkStepRun(App.Player.players[data.playerNum]).left() === true)  ) { App.Player.players[data.playerNum].posX -= App.Player.speedPlayer*dt; }
                     if ( (App.Player.players[data.playerNum].course === 'top') && (App.Player.checkStepRun(App.Player.players[data.playerNum]).top() === true)  ) { App.Player.players[data.playerNum].posY -= App.Player.speedPlayer*dt; }
@@ -567,60 +565,55 @@
                     return {coordX: x, coordY: y}
                 };
                 var comparePlayers = function(newPos) {
-                    /*for(var i = 0; i < players.length; i++) {
+                    for(var i = 0, l = players.length; i < l; i++) {
 
-                        if ( (newPos.w - players[i].posX)===0  && (newPos.h - players[i].posY)<0 ) {
-                            if ( (players.length > 1) && ( App.Player.playerActive !== i) && Math.abs(newPos.h - players[i].posY)<40 ) { return false; }
-                        }
-                        if ( (newPos.w - players[i].posX)===0  && (newPos.h - players[i].posY)>0 ) {
-                            if ( (players.length > 1) && ( App.Player.playerActive !== i) && (newPos.h - players[i].posY)<10 ) { return false; }
+                        if ( (players.length > 1) && ( App.Player.playerActive !== i) ) {
+                            if ( Math.abs(newPos.w - players[i].posX)<40  && Math.abs(newPos.h - players[i].posY)<40 ) { return false; }
                         }
 
-                        if ( (newPos.w - players[i].posX)<0  && (newPos.h - players[i].posY)===0 ) {
-                            if ( (players.length > 1) && ( App.Player.playerActive !== i) && Math.abs(newPos.w - players[i].posX)<40 ) { return false; }
-                        }
-                        if ( (newPos.w - players[i].posX)>0  && (newPos.h - players[i].posY)===0 ) {
-                            if ( (players.length > 1) && ( App.Player.playerActive !== i) && (newPos.w - players[i].posX)<10 ) { return false; }
-                        }
-                    }*/
-                    return true;
+                    }
+
                 };
 
                 return {
                     left: function() {
-                        var newCoordTop = positionConvert(player.posX - 5, player.posY + 5);
+                        var newCoordTop = positionConvert(player.posX - 5, player.posY + 10);
                         var newCoordMiddle = positionConvert(player.posX - 5, player.posY + 20);
-                        var newCoordBottom = positionConvert(player.posX - 5, player.posY + 35);
+                        var newCoordBottom = positionConvert(player.posX - 5, player.posY + 30);
                         if ( App.levelPlan[newCoordTop.coordY][newCoordTop.coordX] ==="w" ||
                              App.levelPlan[newCoordMiddle.coordY][newCoordMiddle.coordX] ==="w" ||
-                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w"
+                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w" ||
+                             (comparePlayers({ w: player.posX - 5, h: player.posY }) === false)
                         ) { return false; } else { return true; }
                     },
                     right: function() {
-                        var newCoordTop = positionConvert(player.posX + 45, player.posY + 5);
+                        var newCoordTop = positionConvert(player.posX + 45, player.posY + 10);
                         var newCoordMiddle = positionConvert(player.posX + 45, player.posY + 20);
-                        var newCoordBottom = positionConvert(player.posX + 45, player.posY + 35);
+                        var newCoordBottom = positionConvert(player.posX + 45, player.posY + 30);
                         if ( App.levelPlan[newCoordTop.coordY][newCoordTop.coordX] ==="w" ||
                              App.levelPlan[newCoordMiddle.coordY][newCoordMiddle.coordX] ==="w" ||
-                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w"
+                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w" ||
+                             (comparePlayers({ w: player.posX + 5, h: player.posY }) === false)
                         ) { return false; } else { return true; }
                     },
                     top: function() {
-                        var newCoordTop = positionConvert(player.posX + 5, player.posY - 5);
+                        var newCoordTop = positionConvert(player.posX + 10, player.posY - 5);
                         var newCoordMiddle = positionConvert(player.posX + 20, player.posY - 5);
-                        var newCoordBottom = positionConvert(player.posX + 35, player.posY - 5);
+                        var newCoordBottom = positionConvert(player.posX + 30, player.posY - 5);
                         if ( App.levelPlan[newCoordTop.coordY][newCoordTop.coordX] ==="w" ||
                              App.levelPlan[newCoordMiddle.coordY][newCoordMiddle.coordX] ==="w" ||
-                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w"
+                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w" ||
+                             comparePlayers({ w: player.posX, h: player.posY - 5 }) === false
                         ) { return false; } else { return true; }
                     },
                     bottom: function() {
-                        var newCoordTop = positionConvert(player.posX + 5, player.posY + 40);
+                        var newCoordTop = positionConvert(player.posX + 10, player.posY + 40);
                         var newCoordMiddle = positionConvert(player.posX + 20, player.posY + 40);
-                        var newCoordBottom = positionConvert(player.posX + 35, player.posY + 40);
+                        var newCoordBottom = positionConvert(player.posX + 30, player.posY + 40);
                         if ( App.levelPlan[newCoordTop.coordY][newCoordTop.coordX] ==="w" ||
                              App.levelPlan[newCoordMiddle.coordY][newCoordMiddle.coordX] ==="w" ||
-                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w"
+                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w" ||
+                             comparePlayers({ w: player.posX, h: player.posY + 5 }) === false
                         ) { return false; } else { return true; }
                     }
                 }
