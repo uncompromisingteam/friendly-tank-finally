@@ -465,9 +465,11 @@
                     App.Player.canRun = false;
                     App.Player.players[App.Player.playerActive].course = 'right';
                     IO.socket.emit('playerRun', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive });
-                    App.$doc.on('keyup', function(){
-                        IO.socket.emit('playerStop', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive });
-                        App.Player.canRun = true;
+                    App.$doc.on('keyup', function(event){
+                        if (event.keyCode === 39) {
+                            IO.socket.emit('playerStop', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive });
+                            App.Player.canRun = true;
+                        }
                     });
 
                 }
@@ -476,9 +478,11 @@
                     App.Player.canRun = false;
                     App.Player.players[App.Player.playerActive].course = 'left';
                     IO.socket.emit('playerRun', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
-                    App.$doc.on('keyup', function(){
-                        IO.socket.emit('playerStop', {player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive});
-                        App.Player.canRun = true;
+                    App.$doc.on('keyup', function(event){
+                        if (event.keyCode === 37) {
+                            IO.socket.emit('playerStop', { player: App.Player.players[App.Player.playerActive], playerNum: App.Player.playerActive });
+                            App.Player.canRun = true;
+                        }
                     });
                 }
                 if ((eventObject.keyCode === 38) && (App.Player.canRun === true) ) {
@@ -518,18 +522,22 @@
 
                     var dt = 0.017;
 
-                    if ( App.Player.players[data.playerNum].course === 'right' ) { App.Player.players[data.playerNum].posX += App.Player.speedPlayer*dt; }
-                    if ( App.Player.players[data.playerNum].course === 'left' ) { App.Player.players[data.playerNum].posX -= App.Player.speedPlayer*dt; }
-                    if ( App.Player.players[data.playerNum].course === 'top' ) { App.Player.players[data.playerNum].posY -= App.Player.speedPlayer*dt; }
-                    if ( App.Player.players[data.playerNum].course === 'bottom' ) { App.Player.players[data.playerNum].posY += App.Player.speedPlayer*dt; }
 
+
+                    if ( (App.Player.players[data.playerNum].course === 'right') && (App.Player.checkStepRun(App.Player.players[data.playerNum]).right() === true) ) { App.Player.players[data.playerNum].posX += App.Player.speedPlayer*dt; }
+                    if ( (App.Player.players[data.playerNum].course === 'left') && (App.Player.checkStepRun(App.Player.players[data.playerNum]).left() === true)  ) { App.Player.players[data.playerNum].posX -= App.Player.speedPlayer*dt; }
+                    if ( (App.Player.players[data.playerNum].course === 'top') && (App.Player.checkStepRun(App.Player.players[data.playerNum]).top() === true)  ) { App.Player.players[data.playerNum].posY -= App.Player.speedPlayer*dt; }
+                    if ( (App.Player.players[data.playerNum].course === 'bottom') && (App.Player.checkStepRun(App.Player.players[data.playerNum]).bottom() === true)  ) { App.Player.players[data.playerNum].posY += App.Player.speedPlayer*dt; }
 
                     $('.tankContainer_'+ App.Player.players[data.playerNum].mySocketId ).css({'left': App.Player.players[data.playerNum].posX + 'px',
-                                                                                    'top': App.Player.players[data.playerNum].posY + 'px',
-                                                                                    'background-image':  App.Player.getCourseURL(data.player.course)
-                                                                                });
+                                                                                                'top': App.Player.players[data.playerNum].posY + 'px',
+                                                                                                'background-image':  App.Player.getCourseURL(data.player.course)
+                                                                                            });
 
                     if (App.mySocketId === App.Player.players[data.playerNum].mySocketId) { App.Player.windowRotate(); }
+
+
+
                 }
 
                 return {
@@ -537,14 +545,83 @@
                         refresh();
                     },
                     stop: function() {
-
                         cancelAnimationFrame( App.Player.refreshAnimateFrameID[data.playerNum] );
-                        //App.Player.players = data.players.slice();
-                        //IO.socket.emit('regularUpdateCoordination', { players: App.Player.players, playerNum: data.playerNum });
-                        //App.Player.refreshAnimateFrameID[data.playerNum] = undefined;
-                        //console.log(App.Player.refreshAnimateFrameID);
-                        //App.Player.refreshAnimateFrameID = 0;
-                        //App.Player.refreshAnimateFrameID.splice(data.playerNum, 1);
+                    }
+                }
+
+            },
+
+            checkStepRun: function(player) {
+                var players = App.Player.players;
+
+
+                var positionConvert = function(posX, posY) {
+
+                    var x = Math.floor(posX/App.$initWallSize),
+                        y = Math.floor(posY/App.$initWallSize);
+
+
+                    // if ( posX % App.$initWallSize > 0 ) { x++; }
+                    // if ( posY % App.$initWallSize > 0 ) { y++; }
+
+                    return {coordX: x, coordY: y}
+                };
+                var comparePlayers = function(newPos) {
+                    /*for(var i = 0; i < players.length; i++) {
+
+                        if ( (newPos.w - players[i].posX)===0  && (newPos.h - players[i].posY)<0 ) {
+                            if ( (players.length > 1) && ( App.Player.playerActive !== i) && Math.abs(newPos.h - players[i].posY)<40 ) { return false; }
+                        }
+                        if ( (newPos.w - players[i].posX)===0  && (newPos.h - players[i].posY)>0 ) {
+                            if ( (players.length > 1) && ( App.Player.playerActive !== i) && (newPos.h - players[i].posY)<10 ) { return false; }
+                        }
+
+                        if ( (newPos.w - players[i].posX)<0  && (newPos.h - players[i].posY)===0 ) {
+                            if ( (players.length > 1) && ( App.Player.playerActive !== i) && Math.abs(newPos.w - players[i].posX)<40 ) { return false; }
+                        }
+                        if ( (newPos.w - players[i].posX)>0  && (newPos.h - players[i].posY)===0 ) {
+                            if ( (players.length > 1) && ( App.Player.playerActive !== i) && (newPos.w - players[i].posX)<10 ) { return false; }
+                        }
+                    }*/
+                    return true;
+                };
+
+                return {
+                    left: function() {
+                        var newCoordTop = positionConvert(player.posX - 5, player.posY + 5);
+                        var newCoordMiddle = positionConvert(player.posX - 5, player.posY + 20);
+                        var newCoordBottom = positionConvert(player.posX - 5, player.posY + 35);
+                        if ( App.levelPlan[newCoordTop.coordY][newCoordTop.coordX] ==="w" ||
+                             App.levelPlan[newCoordMiddle.coordY][newCoordMiddle.coordX] ==="w" ||
+                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w"
+                        ) { return false; } else { return true; }
+                    },
+                    right: function() {
+                        var newCoordTop = positionConvert(player.posX + 45, player.posY + 5);
+                        var newCoordMiddle = positionConvert(player.posX + 45, player.posY + 20);
+                        var newCoordBottom = positionConvert(player.posX + 45, player.posY + 35);
+                        if ( App.levelPlan[newCoordTop.coordY][newCoordTop.coordX] ==="w" ||
+                             App.levelPlan[newCoordMiddle.coordY][newCoordMiddle.coordX] ==="w" ||
+                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w"
+                        ) { return false; } else { return true; }
+                    },
+                    top: function() {
+                        var newCoordTop = positionConvert(player.posX + 5, player.posY - 5);
+                        var newCoordMiddle = positionConvert(player.posX + 20, player.posY - 5);
+                        var newCoordBottom = positionConvert(player.posX + 35, player.posY - 5);
+                        if ( App.levelPlan[newCoordTop.coordY][newCoordTop.coordX] ==="w" ||
+                             App.levelPlan[newCoordMiddle.coordY][newCoordMiddle.coordX] ==="w" ||
+                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w"
+                        ) { return false; } else { return true; }
+                    },
+                    bottom: function() {
+                        var newCoordTop = positionConvert(player.posX + 5, player.posY + 40);
+                        var newCoordMiddle = positionConvert(player.posX + 20, player.posY + 40);
+                        var newCoordBottom = positionConvert(player.posX + 35, player.posY + 40);
+                        if ( App.levelPlan[newCoordTop.coordY][newCoordTop.coordX] ==="w" ||
+                             App.levelPlan[newCoordMiddle.coordY][newCoordMiddle.coordX] ==="w" ||
+                             App.levelPlan[newCoordBottom.coordY][newCoordBottom.coordX] ==="w"
+                        ) { return false; } else { return true; }
                     }
                 }
 
